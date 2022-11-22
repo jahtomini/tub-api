@@ -14,7 +14,7 @@ def create_app(test_config=None):
         excited = os.environ['EXCITED']
         greeting = "Hello" 
         if excited == 'true': 
-            greeting = greeting + "!!!!! You are doing great in this Udacity project."
+            greeting = greeting + "!!You are doing great in this Udacity project!!"
         return greeting
 
     @app.route('/coolkids')
