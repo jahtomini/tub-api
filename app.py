@@ -1,3 +1,4 @@
+import os
 import sys
 
 from flask import Flask, jsonify, abort, request
@@ -8,6 +9,7 @@ from auth import requires_auth, AuthError
 
 from flask_cors import CORS
 
+PORT = os.environ["PORT"]
 
 def create_app(test_config=None):
     app = Flask(__name__)
@@ -16,13 +18,13 @@ def create_app(test_config=None):
 
     @app.route('/')
     @requires_auth(permission='get:user')
-    def index():
+    def index(payload):
         return "Welcome to the Tub API, the core backend for the nonexistent Tub platform where users can " \
                "share shower thoughts with each other."
 
     @app.route('/db', methods=['DELETE'])
     @requires_auth(permission='delete:user')
-    def reset_db():
+    def reset_db(payload):
         insert_mock_data()
         return jsonify({
             "message": "Database has been reset."
@@ -30,7 +32,7 @@ def create_app(test_config=None):
 
     @app.route('/shower_thoughts', methods=['POST'])
     @requires_auth(permission='add:shower_thought')
-    def add_new_shower_thought():
+    def add_new_shower_thought(payload):
         data = request.get_json()
         error = None
 
@@ -73,7 +75,7 @@ def create_app(test_config=None):
 
     @app.route('/shower_thoughts/<int:item_id>', methods=['DELETE'])
     @requires_auth(permission='delete:shower_thought')
-    def delete_shower_thought(item_id):
+    def delete_shower_thought(payload, item_id):
         error = None
         try:
             item = ShowerThought.query.get(item_id)
@@ -93,7 +95,7 @@ def create_app(test_config=None):
 
     @app.route('/shower_thoughts/<int:item_id>', methods=['PATCH'])
     @requires_auth(permission='edit:shower_thought')
-    def edit_shower_thought(item_id):
+    def edit_shower_thought(payload, item_id):
         shower_thought = ShowerThought.query.get(item_id)
         data = request.get_json()
         print(data)
@@ -119,7 +121,7 @@ def create_app(test_config=None):
 
     @app.route('/users', methods=['POST'])
     @requires_auth(permission='add:user')
-    def add_new_user():
+    def add_new_user(payload):
         new_user = None
         data = request.get_json()
         error = None
@@ -152,7 +154,7 @@ def create_app(test_config=None):
 
     @app.route('/users/<int:user_id>', methods=['GET'])
     @requires_auth(permission='get:user')
-    def get_user(user_id):
+    def get_user(payload, user_id):
         error = False
         user = User.query.get(user_id)
 
@@ -172,7 +174,7 @@ def create_app(test_config=None):
 
     @app.route('/users/<int:user_id>/followers', methods=['GET'])
     @requires_auth(permission='get:user')
-    def get_user_followers(user_id):
+    def get_user_followers(payload, user_id):
         error = 0
         user = User.query.get(user_id)
         followers = None
@@ -206,7 +208,7 @@ def create_app(test_config=None):
 
     @app.route('/users/<int:user_id>', methods=['DELETE'])
     @requires_auth(permission='delete:user')
-    def delete_user(user_id):
+    def delete_user(payload, user_id):
         error = None
         try:
             user = User.query.get(user_id)
@@ -226,7 +228,7 @@ def create_app(test_config=None):
 
     @app.route('/users', methods=['GET'])
     @requires_auth(permission='get:user')
-    def get_all_users():
+    def get_all_users(payload):
         raw_users = User.query.order_by(User.id).all()
         users = []
 
@@ -324,4 +326,4 @@ def create_app(test_config=None):
 app = create_app()
 
 if __name__ == '__main__':
-    app.run(host='127.0.0.1', port=3001)
+    app.run(host='127.0.0.1', port=PORT or 3001)
