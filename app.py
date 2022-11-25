@@ -1,47 +1,12 @@
-import os
-import random
-from flask import Flask, jsonify
-from models import setup_db, User, ShowerThought, Connection, insert_mock_data
+import sys
+
+from flask import Flask, jsonify, abort, request
+
+from helpers import get_random_thought, get_followers
+from models import setup_db, User, ShowerThought, insert_mock_data
+from auth import requires_auth, AuthError
+
 from flask_cors import CORS
-
-'''
---------------- UTILITY FUNCTIONS 
-'''
-
-
-def get_random_thought():
-    total = ShowerThought.query.count()
-    rand = random.randint(0, total)
-
-    thought = ShowerThought.query.get(rand)
-
-    if thought is not None:
-        return thought.format()
-    elif thought is None:
-        return get_random_thought()
-
-
-def get_followers(user_id):
-    followers_formatted = []
-
-    users = []
-    followers_raw = [usr.followers for usr in Connection.query.filter_by(user=user_id).all()]
-
-    try:
-        users = followers_raw[0].split(' ')
-    except:
-        return followers_formatted
-    finally:
-        for user in users:
-            user_name = (User.query.get(int(user))).name
-            followers_formatted.append(user_name)
-
-    return followers_formatted
-
-
-'''
---------------- APP
-'''
 
 
 def create_app(test_config=None):
@@ -50,46 +15,309 @@ def create_app(test_config=None):
     CORS(app)
 
     @app.route('/')
+    @requires_auth(permission='get:user')
     def index():
-        return jsonify({
-            "hello": "Welcome to the Tub API! Consult the documentation to get started.",
-            "message": "The Tub API is the core backend for the nonexistent Tub platform where users can share "
-                       "shower thoughts with each other."
-        })
+        return "Welcome to the Tub API, the core backend for the nonexistent Tub platform where users can " \
+               "share shower thoughts with each other."
 
-    # TODO: ensure this is authenticated w/ permissions & is turned into a POST request
-    @app.route('/reset_db', methods=['GET'])
+    @app.route('/db', methods=['DELETE'])
+    @requires_auth(permission='delete:user')
     def reset_db():
         insert_mock_data()
         return jsonify({
             "message": "Database has been reset."
-        })
+        }), 200
 
-    @app.route('/users/<int:user_id>', methods=['GET'])
-    def get_user(user_id):
-        user = User.query.get(user_id)
-        shower_thoughts = ShowerThought.query.filter_by(creator=user.name).all()
+    @app.route('/shower_thoughts', methods=['POST'])
+    @requires_auth(permission='add:shower_thought')
+    def add_new_shower_thought():
+        data = request.get_json()
+        error = None
 
-        return jsonify({
-            "id": user.id,
-            "name": user.name,
-            "shower_thoughts": [thought.format() for thought in shower_thoughts]
-        })
+        try:
+            all_of_em = ShowerThought.query.all()
+            for x in all_of_em:
+                if x.creator == data["creator"] and x.content == data["content"]:
+                    error = 1
+                    return error
 
-    @app.route('/users/<int:user_id>/followers', methods=['GET'])
-    def get_user_followers(user_id):
-        user = User.query.get(user_id)
+            new_shower_thought = ShowerThought(creator=data["creator"], content=data["content"])
+            new_shower_thought.insert()
+        except Exception as e:
+            print(sys.exc_info())
+            print(e)
+        finally:
+            if error == 1:
+                return jsonify({
+                    "success": False,
+                    "message": "Identical showerthought already exists"
+                }), 400
+            elif error is None:
+                return jsonify({
+                    "success": True,
+                    "message": "New showerthought created",
+                    "status": 201,
+                    "creator": data["creator"],
+                    "content": data["content"],
+                }), 201
 
-        return jsonify({
-            "id": user.id,
-            "username": user.name,
-            "followers": get_followers(user_id)
-        })
+    @app.route('/all')
+    def get_all_shower_thoughts():
+        all_shower_thoughts = [thought.format() for thought in
+                               ShowerThought.query.order_by(ShowerThought.creator).all()]
+        return jsonify(all_shower_thoughts)
 
     @app.route('/random', methods=['GET'])
     def get_random_shower_thought():
         return get_random_thought()
 
+    @app.route('/shower_thoughts/<int:item_id>', methods=['DELETE'])
+    @requires_auth(permission='delete:shower_thought')
+    def delete_shower_thought(item_id):
+        error = None
+        try:
+            item = ShowerThought.query.get(item_id)
+            item.delete()
+        except Exception as e:
+            error = 1
+            print(e)
+            print(sys.exc_info())
+        finally:
+            if error is None:
+                return jsonify({
+                    "message": "Showerthought successfully deleted.",
+                    "id": item_id,
+                }), 200
+            else:
+                abort(404)
+
+    @app.route('/shower_thoughts/<int:item_id>', methods=['PATCH'])
+    @requires_auth(permission='edit:shower_thought')
+    def edit_shower_thought(item_id):
+        shower_thought = ShowerThought.query.get(item_id)
+        data = request.get_json()
+        print(data)
+        error = None
+
+        try:
+            the_id = shower_thought.id
+            print(the_id)
+            shower_thought.content = data["content"]
+            shower_thought.update()
+        except Exception as e:
+            print(sys.exc_info(), e)
+            error = 1
+        finally:
+            if error is None:
+                return jsonify({
+                    "success": True,
+                    "content": shower_thought.content,
+                    "by": shower_thought.creator
+                }), 200
+            else:
+                abort(404)
+
+    @app.route('/users', methods=['POST'])
+    @requires_auth(permission='add:user')
+    def add_new_user():
+        new_user = None
+        data = request.get_json()
+        error = None
+
+        try:
+            existing_users = User.query.all()
+            for user in existing_users:
+                if user.name == data["name"]:
+                    error = 1
+
+            new_user = User(name=data["name"])
+            new_user.insert()
+        except Exception as e:
+            print(sys.exc_info())
+            print(e)
+        finally:
+            if error == 1:
+                return jsonify({
+                    "success": False,
+                    "message": "User with that name already exists"
+                }), 400
+            elif error is None:
+                return jsonify({
+                    "success": True,
+                    "message": "New user created",
+                    "status": 201,
+                    "user_id": new_user.id,
+                    "user_name": new_user.name
+                }), 201
+
+    @app.route('/users/<int:user_id>', methods=['GET'])
+    @requires_auth(permission='get:user')
+    def get_user(user_id):
+        error = False
+        user = User.query.get(user_id)
+
+        try:
+            shower_thoughts = ShowerThought.query.filter_by(creator=user.name).all()
+        except:
+            error = True
+        finally:
+            if error is True:
+                abort(404)
+            else:
+                return jsonify({
+                    "id": user.id,
+                    "name": user.name,
+                    "shower_thoughts": [thought.format() for thought in shower_thoughts]
+                }), 200
+
+    @app.route('/users/<int:user_id>/followers', methods=['GET'])
+    @requires_auth(permission='get:user')
+    def get_user_followers(user_id):
+        error = 0
+        user = User.query.get(user_id)
+        followers = None
+
+        try:
+            followers = get_followers(user_id)
+            return jsonify({
+                "success": True,
+                "user_id": user.id,
+                "username": user.name,
+                "followers": followers
+            }), 200
+        except Exception as e:
+            print(e)
+            print(sys.exc_info())
+        finally:
+            if user is None:
+                print(str(error))
+                return jsonify({
+                    "success": False,
+                    "error": 404,
+                    "message": "This user does not exist.",
+                }), 404
+            else:
+                return jsonify({
+                    "success": True,
+                    "user_id": user.id,
+                    "username": user.name,
+                    "followers": followers
+                }), 200
+
+    @app.route('/users/<int:user_id>', methods=['DELETE'])
+    @requires_auth(permission='delete:user')
+    def delete_user(user_id):
+        error = None
+        try:
+            user = User.query.get(user_id)
+            user.delete()
+        except Exception as e:
+            error = 1
+            print(e)
+            print(sys.exc_info())
+        finally:
+            if error is None:
+                return jsonify({
+                    "message": "User account successfully deleted.",
+                    "id": user_id,
+                }), 200
+            else:
+                abort(404)
+
+    @app.route('/users', methods=['GET'])
+    @requires_auth(permission='get:user')
+    def get_all_users():
+        raw_users = User.query.order_by(User.id).all()
+        users = []
+
+        try:
+            for user in raw_users:
+                user_followers, user_data = None, None
+                try:
+                    user_data = user.format()
+                    user_followers = get_followers(user.id)
+                except Exception as e:
+                    print(e)
+                finally:
+                    data = {
+                        "user": user_data,
+                        "followers": user_followers
+                    }
+                    users.append(data)
+        except Exception as e:
+            print(e)
+        finally:
+            return jsonify({
+                "users": users,
+            })
+
+    '''
+    --------------- ERROR CODES
+    '''
+
+    @app.errorhandler(400)
+    def bad_request(error):
+        return jsonify({
+            "success": False,
+            "error": 400,
+            "message": "Bad request."
+        })
+
+    @app.errorhandler(401)
+    def unauthorized(error):
+        return jsonify({
+            "success": False,
+            "error": 401,
+            "message": "Unauthorized."
+        })
+
+    @app.errorhandler(403)
+    def forbidden(error):
+        return jsonify({
+            "success": False,
+            "error": 403,
+            "message": "Forbidden."
+        })
+
+    @app.errorhandler(404)
+    def not_found(error):
+        return jsonify({
+            "success": False,
+            "error": 404,
+            "message": "Resource not found."
+        })
+
+    @app.errorhandler(405)
+    def method_not_allowed(error):
+        return jsonify({
+            "success": False,
+            "error": 405,
+            "message": "Method not allowed."
+        })
+
+    @app.errorhandler(422)
+    def unprocessable(error):
+        return jsonify({
+            "success": False,
+            "error": 422,
+            "message": "Unprocessable entity."
+        })
+
+    @app.errorhandler(AuthError)
+    def auth_error(error):
+        print(error.status_code)
+        if error.status_code == 401:
+            return jsonify({
+                "success": False,
+                "error": 401,
+                "message": "unauthorized"
+            }), 401
+        elif error.status_code == 403:
+            return jsonify({
+                "success": False,
+                "error": 403,
+                "message": "forbidden"
+            }), 403
     return app
 
 
