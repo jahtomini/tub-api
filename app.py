@@ -2,8 +2,8 @@ import sys
 
 from flask import Flask, jsonify, abort, request
 
-from helpers import get_random_thought, get_followers
 from models import setup_db, User, ShowerThought, insert_mock_data
+from helpers import get_random_thought, get_followers
 from auth import requires_auth, AuthError
 
 from flask_cors import CORS

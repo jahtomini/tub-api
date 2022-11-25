@@ -70,6 +70,13 @@ class User(db.Model):
         db.session.add(self)
         db.session.commit()
 
+    def update(self):
+        db.session.commit()
+
+    def delete(self):
+        db.session.delete(self)
+        db.session.commit()
+
     def __repr__(self):
         return f'<User id={self.id}, username={self.name}>'
 
@@ -87,6 +94,13 @@ class ShowerThought(db.Model):
 
     def insert(self):
         db.session.add(self)
+        db.session.commit()
+
+    def update(self):
+        db.session.commit()
+
+    def delete(self):
+        db.session.delete(self)
         db.session.commit()
 
     def format(self):
@@ -115,6 +129,13 @@ class Connection(db.Model):
 
     def insert(self):
         db.session.add(self)
+        db.session.commit()
+
+    def update(self):
+        db.session.commit()
+
+    def delete(self):
+        db.session.delete(self)
         db.session.commit()
 
     def format(self):
