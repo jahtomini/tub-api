@@ -29,39 +29,6 @@ def create_app(test_config=None):
             "message": "Database has been reset."
         }), 200
 
-    @app.route('/shower_thoughts', methods=['POST'])
-    @requires_auth(permission='add:showerthought')
-    def add_new_shower_thought(payload):
-        data = request.get_json()
-        error = None
-
-        try:
-            all_of_em = ShowerThought.query.all()
-            for x in all_of_em:
-                if x.creator == data["creator"] and x.content == data["content"]:
-                    error = 1
-                    return error
-
-            new_shower_thought = ShowerThought(creator=data["creator"], content=data["content"])
-            new_shower_thought.insert()
-        except Exception as e:
-            print(sys.exc_info())
-            print(e)
-        finally:
-            if error == 1:
-                return jsonify({
-                    "success": False,
-                    "message": "Identical showerthought already exists"
-                }), 400
-            elif error is None:
-                return jsonify({
-                    "success": True,
-                    "message": "New showerthought created",
-                    "status": 201,
-                    "creator": data["creator"],
-                    "content": data["content"],
-                }), 201
-
     @app.route('/all')
     def get_all_shower_thoughts():
         all_shower_thoughts = [thought.format() for thought in
@@ -74,25 +41,51 @@ def create_app(test_config=None):
             "random": get_random_thought()
         })
 
-    @app.route('/shower_thoughts/<int:item_id>', methods=['DELETE'])
-    @requires_auth(permission='delete:showerthought')
-    def delete_shower_thought(payload, item_id):
+    @app.route('/shower_thoughts', methods=['POST'])
+    @requires_auth(permission='add:showerthought')
+    def add_new_shower_thought(payload):
+        data = request.get_json()
         error = None
-        try:
-            item = ShowerThought.query.get(item_id)
-            item.delete()
-        except Exception as e:
-            error = 1
-            print(e)
-            print(sys.exc_info())
-        finally:
-            if error is None:
-                return jsonify({
-                    "message": "Showerthought successfully deleted.",
-                    "id": item_id,
-                }), 200
+
+        creator_exists = False
+
+        users = User.query.all()
+
+        for user in users:
+            if data["creator"] != user.name:
+                continue
             else:
-                abort(404)
+                creator_exists = True
+
+        if data and (creator_exists is True):
+            try:
+                all_of_em = ShowerThought.query.all()
+                for x in all_of_em:
+                    if x.creator == data["creator"] and x.content == data["content"]:
+                        error = 1
+                        return error
+
+                new_shower_thought = ShowerThought(creator=data["creator"], content=data["content"])
+                new_shower_thought.insert()
+            except Exception as e:
+                print(sys.exc_info())
+                print(e)
+            finally:
+                if error == 1:
+                    return jsonify({
+                        "success": False,
+                        "message": "Identical showerthought already exists"
+                    }), 400
+                elif error is None:
+                    return jsonify({
+                        "success": True,
+                        "message": "New showerthought created",
+                        "status": 201,
+                        "creator": data["creator"],
+                        "content": data["content"],
+                    }), 201
+        else:
+            abort(400)
 
     @app.route('/shower_thoughts/<int:item_id>', methods=['PATCH'])
     @requires_auth(permission='edit:showerthought')
@@ -116,6 +109,26 @@ def create_app(test_config=None):
                     "success": True,
                     "content": shower_thought.content,
                     "by": shower_thought.creator
+                }), 200
+            else:
+                abort(404)
+
+    @app.route('/shower_thoughts/<int:item_id>', methods=['DELETE'])
+    @requires_auth(permission='delete:showerthought')
+    def delete_shower_thought(payload, item_id):
+        error = None
+        try:
+            item = ShowerThought.query.get(item_id)
+            item.delete()
+        except Exception as e:
+            error = 1
+            print(e)
+            print(sys.exc_info())
+        finally:
+            if error is None:
+                return jsonify({
+                    "message": "Showerthought successfully deleted.",
+                    "id": item_id,
                 }), 200
             else:
                 abort(404)
