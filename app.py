@@ -87,6 +87,43 @@ def create_app(test_config=None):
         else:
             abort(400)
 
+    # @app.route('/users/<int:user_id>', methods=['PATCH'])
+    # @requires_auth(permission='edit:user')
+    # def edit_user(payload, user_id):
+    #     user = User.query.get(user_id)
+    #     data = request.get_json()
+    #     print(data)
+    #     error = None
+    #
+    #     # get all showerthoughts whose creator == old user.name
+    #
+    #     old_name = user.name
+    #     related_showerthoughts = ShowerThought.query.filter_by(creator=old_name).all()
+    #     print(related_showerthoughts)
+    #
+    #     try:
+    #         the_id = user.id
+    #         print(the_id)  # break the try catch if user does not exist
+    #
+    #         for item in related_showerthoughts:
+    #             item.creator = data["name"]
+    #             item.update()
+    #
+    #         user.name = data["name"]
+    #         user.update()
+    #
+    #     except Exception as e:
+    #         print(sys.exc_info(), e)
+    #         error = 1
+    #     finally:
+    #         if error is None:
+    #             return jsonify({
+    #                 "success": True,
+    #                 "user_name": user.name
+    #             }), 200
+    #         else:
+    #             abort(404)
+    #     return 'done'
     @app.route('/shower_thoughts/<int:item_id>', methods=['PATCH'])
     @requires_auth(permission='edit:showerthought')
     def edit_shower_thought(payload, item_id):
@@ -94,24 +131,27 @@ def create_app(test_config=None):
         data = request.get_json()
         print(data)
         error = None
+        if "content" in data:
+            try:
+                the_id = shower_thought.id
+                print(the_id)
+                shower_thought.content = data["content"]
+                shower_thought.update()
+            except Exception as e:
+                print(sys.exc_info(), e)
+                error = 1
+            finally:
+                if error is None:
+                    return jsonify({
+                        "success": True,
+                        "content": shower_thought.content,
+                        "by": shower_thought.creator
+                    }), 200
+                else:
+                    abort(404)
+        else:
+            abort(400)
 
-        try:
-            the_id = shower_thought.id
-            print(the_id)
-            shower_thought.content = data["content"]
-            shower_thought.update()
-        except Exception as e:
-            print(sys.exc_info(), e)
-            error = 1
-        finally:
-            if error is None:
-                return jsonify({
-                    "success": True,
-                    "content": shower_thought.content,
-                    "by": shower_thought.creator
-                }), 200
-            else:
-                abort(404)
 
     @app.route('/shower_thoughts/<int:item_id>', methods=['DELETE'])
     @requires_auth(permission='delete:showerthought')
@@ -224,8 +264,8 @@ def create_app(test_config=None):
     @requires_auth(permission='delete:user')
     def delete_user(payload, user_id):
         error = None
+        user = User.query.get(user_id)
         try:
-            user = User.query.get(user_id)
             print(user)
             user.delete()
         except Exception as e:
@@ -235,8 +275,10 @@ def create_app(test_config=None):
         finally:
             if error is None:
                 return jsonify({
+                    "status": 200,
                     "message": "User account successfully deleted.",
-                    "id": user_id,
+                    "user_name": user.name,
+                    "user_id": user_id,
                 }), 200
             else:
                 abort(404)

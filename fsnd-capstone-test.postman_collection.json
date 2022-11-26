@@ -390,6 +390,61 @@
 						}
 					},
 					"response": []
+				},
+				{
+					"name": "shower_thoughts/1",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 403 because credentials are valid but user is not permitted to perform this action \", function () {",
+									"    pm.response.to.have.status(403);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6IkR2QmlWUXJXZ1RSWGFmcDNKZDQ5MyJ9.eyJpc3MiOiJodHRwczovL2Rldi1zdzE1NHl3dC51cy5hdXRoMC5jb20vIiwic3ViIjoiYXV0aDB8NjM2YTg4YTU1M2ZlYzI3MjVkYWE4MjMyIiwiYXVkIjoidHViLWFwaSIsImlhdCI6MTY2OTQ3NTc3OCwiZXhwIjoxNjY5NTExNzc4LCJhenAiOiJuTW9jUWJ2c1l3N2JwT3VnQ3NVcWtOMEwzcmxLbUhRUCIsInNjb3BlIjoiIiwicGVybWlzc2lvbnMiOlsiYWRkOnNob3dlcnRob3VnaHQiLCJhZGQ6dXNlciIsImRlbGV0ZTpzaG93ZXJ0aG91Z2h0IiwiZWRpdDp1c2VyIiwiZ2V0OnVzZXIiXX0.DdehD19aV_11b-I4D55CoocEdCceHlc2--EdGb-yx6_BBF1ZzftSlvl2c6kdkGws7_6cyNq4CXoxDWByMI5VBAUw-M2qc7GnpOOJMru0EzSqhoNpt2hrF2IgGf6bM6Uak6vWarfO2iAXFz0-zSGu96IiUKMozZ5w1FFkL_DOhDN_8ZHwRptl6K2VjI1syiFwjx_o7ClhCNYpk3AoanTC4sfieDT2mSXj4dDdZ0KIQIXsUimN1PnMoePAu8s7zC5ahuH_WNboZvR1bSFsllWjEAEtYLJ2bO-9SDBBSpPRz_CWkefSOpC168YyudpeBTHQj8n94QTmfC3khMds8Ov-JA",
+									"type": "string"
+								}
+							]
+						},
+						"method": "PATCH",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"content\": \"Nighttime is the natural state of the universe and daytime is only caused by a nearby, radiating ball of flame.\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://127.0.0.1:3001/shower_thoughts/1",
+							"protocol": "http",
+							"host": [
+								"127",
+								"0",
+								"0",
+								"1"
+							],
+							"port": "3001",
+							"path": [
+								"shower_thoughts",
+								"1"
+							]
+						}
+					},
+					"response": []
 				}
 			],
 			"auth": {
@@ -667,7 +722,7 @@
 							"listen": "test",
 							"script": {
 								"exec": [
-									"pm.test(\"Status code is 403 because credentials are valid but not permitted to view the resource.\", function () {",
+									"pm.test(\"Status code is 403 because credentials are valid but not permitted to edit this resource.\", function () {",
 									"    pm.response.to.have.status(403);",
 									"});"
 								],
@@ -720,6 +775,48 @@
 							"path": [
 								"shower_thoughts",
 								"2"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "shower_thoughts/1",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6IkR2QmlWUXJXZ1RSWGFmcDNKZDQ5MyJ9.eyJpc3MiOiJodHRwczovL2Rldi1zdzE1NHl3dC51cy5hdXRoMC5jb20vIiwic3ViIjoiYXV0aDB8NjM2YTg4YTU1M2ZlYzI3MjVkYWE4MjMyIiwiYXVkIjoidHViLWFwaSIsImlhdCI6MTY2OTQ3NTc3OCwiZXhwIjoxNjY5NTExNzc4LCJhenAiOiJuTW9jUWJ2c1l3N2JwT3VnQ3NVcWtOMEwzcmxLbUhRUCIsInNjb3BlIjoiIiwicGVybWlzc2lvbnMiOlsiYWRkOnNob3dlcnRob3VnaHQiLCJhZGQ6dXNlciIsImRlbGV0ZTpzaG93ZXJ0aG91Z2h0IiwiZWRpdDp1c2VyIiwiZ2V0OnVzZXIiXX0.DdehD19aV_11b-I4D55CoocEdCceHlc2--EdGb-yx6_BBF1ZzftSlvl2c6kdkGws7_6cyNq4CXoxDWByMI5VBAUw-M2qc7GnpOOJMru0EzSqhoNpt2hrF2IgGf6bM6Uak6vWarfO2iAXFz0-zSGu96IiUKMozZ5w1FFkL_DOhDN_8ZHwRptl6K2VjI1syiFwjx_o7ClhCNYpk3AoanTC4sfieDT2mSXj4dDdZ0KIQIXsUimN1PnMoePAu8s7zC5ahuH_WNboZvR1bSFsllWjEAEtYLJ2bO-9SDBBSpPRz_CWkefSOpC168YyudpeBTHQj8n94QTmfC3khMds8Ov-JA",
+									"type": "string"
+								}
+							]
+						},
+						"method": "PATCH",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"johnxena\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://127.0.0.1:3001/users/1",
+							"protocol": "http",
+							"host": [
+								"127",
+								"0",
+								"0",
+								"1"
+							],
+							"port": "3001",
+							"path": [
+								"users",
+								"1"
 							]
 						}
 					},
@@ -887,6 +984,46 @@
 							],
 							"path": [
 								"users"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "/shower_thoughts/1",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "PATCH",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"content\": \"Nighttime is the natural state of the universe and daytime is only caused by a nearby, radiating ball of flame.\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{host}}/shower_thoughts/1",
+							"host": [
+								"{{host}}"
+							],
+							"path": [
+								"shower_thoughts",
+								"1"
 							]
 						}
 					},
