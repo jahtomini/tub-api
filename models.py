@@ -56,6 +56,8 @@ class User(db.Model):
 
     id = Column(db.Integer, primary_key=True)
     name = Column(db.String(24), unique=True)
+    showerthoughts = db.relationship("ShowerThought", cascade='all, delete')
+    connections = db.relationship("Connection", cascade='all, delete')
 
     def __init__(self, name):
         self.name = name

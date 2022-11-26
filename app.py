@@ -226,6 +226,7 @@ def create_app(test_config=None):
         error = None
         try:
             user = User.query.get(user_id)
+            print(user)
             user.delete()
         except Exception as e:
             error = 1
