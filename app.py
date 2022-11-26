@@ -277,7 +277,7 @@ def create_app(test_config=None):
             "success": False,
             "error": 400,
             "message": "Bad request."
-        })
+        }), 400
 
     @app.errorhandler(401)
     def unauthorized(error):
@@ -285,7 +285,7 @@ def create_app(test_config=None):
             "success": False,
             "error": 401,
             "message": "Unauthorized."
-        })
+        }), 401
 
     @app.errorhandler(403)
     def forbidden(error):
@@ -293,7 +293,7 @@ def create_app(test_config=None):
             "success": False,
             "error": 403,
             "message": "Forbidden."
-        })
+        }), 403
 
     @app.errorhandler(404)
     def not_found(error):
@@ -301,7 +301,7 @@ def create_app(test_config=None):
             "success": False,
             "error": 404,
             "message": "Resource not found."
-        })
+        }), 404
 
     @app.errorhandler(405)
     def method_not_allowed(error):
@@ -309,7 +309,7 @@ def create_app(test_config=None):
             "success": False,
             "error": 405,
             "message": "Method not allowed."
-        })
+        }), 405
 
     @app.errorhandler(422)
     def unprocessable(error):
@@ -317,7 +317,7 @@ def create_app(test_config=None):
             "success": False,
             "error": 422,
             "message": "Unprocessable entity."
-        })
+        }), 422
 
     @app.errorhandler(AuthError)
     def auth_error(error):
