@@ -17,7 +17,7 @@ def create_app(test_config=None):
     CORS(app)
 
     @app.route('/')
-    def index(payload):
+    def index():
         return "Welcome to the Tub API, the core backend for the nonexistent Tub platform where users can " \
                "share shower thoughts with each other."
 
