@@ -71,7 +71,9 @@ def create_app(test_config=None):
 
     @app.route('/random', methods=['GET'])
     def get_random_shower_thought():
-        return get_random_thought()
+        return jsonify({
+            "random": get_random_thought()
+        })
 
     @app.route('/shower_thoughts/<int:item_id>', methods=['DELETE'])
     @requires_auth(permission='delete:shower_thought')
