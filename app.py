@@ -17,7 +17,6 @@ def create_app(test_config=None):
     CORS(app)
 
     @app.route('/')
-    @requires_auth(permission='get:user')
     def index(payload):
         return "Welcome to the Tub API, the core backend for the nonexistent Tub platform where users can " \
                "share shower thoughts with each other."
@@ -31,7 +30,7 @@ def create_app(test_config=None):
         }), 200
 
     @app.route('/shower_thoughts', methods=['POST'])
-    @requires_auth(permission='add:shower_thought')
+    @requires_auth(permission='add:showerthought')
     def add_new_shower_thought(payload):
         data = request.get_json()
         error = None
@@ -76,7 +75,7 @@ def create_app(test_config=None):
         })
 
     @app.route('/shower_thoughts/<int:item_id>', methods=['DELETE'])
-    @requires_auth(permission='delete:shower_thought')
+    @requires_auth(permission='delete:showerthought')
     def delete_shower_thought(payload, item_id):
         error = None
         try:
@@ -96,7 +95,7 @@ def create_app(test_config=None):
                 abort(404)
 
     @app.route('/shower_thoughts/<int:item_id>', methods=['PATCH'])
-    @requires_auth(permission='edit:shower_thought')
+    @requires_auth(permission='edit:showerthought')
     def edit_shower_thought(payload, item_id):
         shower_thought = ShowerThought.query.get(item_id)
         data = request.get_json()
