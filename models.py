@@ -32,7 +32,10 @@ def insert_mock_data():
     user_4 = User(name='yilongma')
     user_5 = User(name='messi_10')
 
-    shower_thought_1 = ShowerThought(creator='johncena00034', content="I can't be seen.")
+    shower_thought_1 = ShowerThought(creator='johncena00034', content="It's weird to think that nighttime is the "
+                                                                      "natural state of the universe and daytime is "
+                                                                      "only caused by a nearby, radiating ball of "
+                                                                      "flame.")
     shower_thought_2 = ShowerThought(creator='okayletsgooo', content='A bird can fly but a fly cannot bird.')
 
     connection_1 = Connection(user=1, followers=None, following='1 3 4')
