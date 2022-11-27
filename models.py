@@ -1,7 +1,6 @@
 import os
 from sqlalchemy import Column, String, create_engine
 from flask_sqlalchemy import SQLAlchemy
-import json
 
 database_path = os.environ['DATABASE_URL']
 if database_path.startswith("postgres://"):
@@ -91,7 +90,6 @@ class ShowerThought(db.Model):
 
     id = Column(db.Integer, primary_key=True)
     creator = Column(db.String, db.ForeignKey('users.name'))
-    user = db.relationship("User", backref="shower_thoughts")
     content = Column(db.String(150))
 
     def __init__(self, creator, content):

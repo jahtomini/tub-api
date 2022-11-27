@@ -1,5 +1,6 @@
 import os
 import sys
+import logging
 
 from flask import Flask, jsonify, abort, request
 
@@ -10,6 +11,7 @@ from auth import requires_auth, AuthError
 from flask_cors import CORS
 
 PORT = os.environ["PORT"]
+
 
 def create_app(test_config=None):
     app = Flask(__name__)
@@ -65,11 +67,11 @@ def create_app(test_config=None):
                         error = 1
                         return error
 
-                new_shower_thought = ShowerThought(creator=data["creator"], content=data["content"])
+                new_shower_thought = ShowerThought(
+                    creator=data["creator"], content=data["content"])
                 new_shower_thought.insert()
             except Exception as e:
-                print(sys.exc_info())
-                print(e)
+                logging.exception(e)
             finally:
                 if error == 1:
                     return jsonify({
@@ -85,51 +87,17 @@ def create_app(test_config=None):
                         "content": data["content"],
                     }), 201
         else:
-            abort(400)
+            return jsonify({
+                "success": False,
+                "message": "No user with that name exists."
+            }), 400
 
-    # @app.route('/users/<int:user_id>', methods=['PATCH'])
-    # @requires_auth(permission='edit:user')
-    # def edit_user(payload, user_id):
-    #     user = User.query.get(user_id)
-    #     data = request.get_json()
-    #     print(data)
-    #     error = None
-    #
-    #     # get all showerthoughts whose creator == old user.name
-    #
-    #     old_name = user.name
-    #     related_showerthoughts = ShowerThought.query.filter_by(creator=old_name).all()
-    #     print(related_showerthoughts)
-    #
-    #     try:
-    #         the_id = user.id
-    #         print(the_id)  # break the try catch if user does not exist
-    #
-    #         for item in related_showerthoughts:
-    #             item.creator = data["name"]
-    #             item.update()
-    #
-    #         user.name = data["name"]
-    #         user.update()
-    #
-    #     except Exception as e:
-    #         print(sys.exc_info(), e)
-    #         error = 1
-    #     finally:
-    #         if error is None:
-    #             return jsonify({
-    #                 "success": True,
-    #                 "user_name": user.name
-    #             }), 200
-    #         else:
-    #             abort(404)
-    #     return 'done'
     @app.route('/shower_thoughts/<int:item_id>', methods=['PATCH'])
     @requires_auth(permission='edit:showerthought')
     def edit_shower_thought(payload, item_id):
         shower_thought = ShowerThought.query.get(item_id)
         data = request.get_json()
-        print(data)
+
         error = None
         if "content" in data:
             try:
@@ -138,7 +106,7 @@ def create_app(test_config=None):
                 shower_thought.content = data["content"]
                 shower_thought.update()
             except Exception as e:
-                print(sys.exc_info(), e)
+                logging.exception(e)
                 error = 1
             finally:
                 if error is None:
@@ -152,7 +120,6 @@ def create_app(test_config=None):
         else:
             abort(400)
 
-
     @app.route('/shower_thoughts/<int:item_id>', methods=['DELETE'])
     @requires_auth(permission='delete:showerthought')
     def delete_shower_thought(payload, item_id):
@@ -162,8 +129,7 @@ def create_app(test_config=None):
             item.delete()
         except Exception as e:
             error = 1
-            print(e)
-            print(sys.exc_info())
+            logging.exception(e)
         finally:
             if error is None:
                 return jsonify({
@@ -189,8 +155,7 @@ def create_app(test_config=None):
             new_user = User(name=data["name"])
             new_user.insert()
         except Exception as e:
-            print(sys.exc_info())
-            print(e)
+            logging.exception(e)
         finally:
             if error == 1:
                 return jsonify({
@@ -213,7 +178,8 @@ def create_app(test_config=None):
         user = User.query.get(user_id)
 
         try:
-            shower_thoughts = ShowerThought.query.filter_by(creator=user.name).all()
+            shower_thoughts = ShowerThought.query.filter_by(
+                creator=user.name).all()
         except:
             error = True
         finally:
@@ -242,8 +208,7 @@ def create_app(test_config=None):
                 "followers": followers
             }), 200
         except Exception as e:
-            print(e)
-            print(sys.exc_info())
+            logging.exception(e)
         finally:
             if user is None:
                 print(str(error))
@@ -270,8 +235,7 @@ def create_app(test_config=None):
             user.delete()
         except Exception as e:
             error = 1
-            print(e)
-            print(sys.exc_info())
+            logging.exception(e)
         finally:
             if error is None:
                 return jsonify({
@@ -296,7 +260,7 @@ def create_app(test_config=None):
                     user_data = user.format()
                     user_followers = get_followers(user.id)
                 except Exception as e:
-                    print(e)
+                    logging.exception(e)
                 finally:
                     data = {
                         "user": user_data,
@@ -304,7 +268,7 @@ def create_app(test_config=None):
                     }
                     users.append(data)
         except Exception as e:
-            print(e)
+            logging.exception(e)
         finally:
             return jsonify({
                 "users": users,
